@@ -62,7 +62,8 @@ while true; do
     echo "5) Recovery: Reset Remote Password"
     echo "6) Exit"
     echo "7) Get a Muffin (Because why not?)"
-    read -p "Select a hacking tool [1-7]: " choice
+    echo "8) Check the Weather (Because why not?)"
+    read -p "Select a hacking tool [1-8]: " choice
 
     case $choice in
         1|3|4)
