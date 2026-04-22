@@ -125,9 +125,21 @@ while true; do
             echo "[SUCCESS] Muffin acquired from the void."
             ;;
         8)
-            echo "Getting weather forecast for your location..."
+             echo "Accessing global satellite weather feed..."
+            # Resize to wide (125 cols, 40 rows to see the full forecast)
+            printf '\033[8;40;125t'
+            sleep 1 # Give the window a second to resize
+            echo "checking internet connection..."
             ping -c 10 wttr.in
+            sleep 1
+             echo "Fetching weather data..."
+             sleep 1
+             echo "fetched weather data, displaying..."
             curl wttr.in
+            
+            read -p "Feed complete. Press Enter to return to 91x24 terminal."
+            # Resize back to your standard hacker size
+            printf '\033[8;24;91t'
             ;;
         *)
             echo "Invalid selection."
