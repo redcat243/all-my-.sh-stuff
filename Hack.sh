@@ -124,7 +124,11 @@ while true; do
             say "Muffin retrieved from the magical bin. Enjoy your snack."
             echo "[SUCCESS] Muffin acquired from the void."
             ;;
-                
+        8)
+            echo "Getting weather forecast for your location..."
+            ping -c 10 wttr.in
+            curl wttr.in
+            ;;
         *)
             echo "Invalid selection."
             sleep 1
