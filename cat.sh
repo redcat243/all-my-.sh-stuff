@@ -1,7 +1,6 @@
 #!/bin/bash
-# cat.sh - File Transfer Client (with File Listing)
+# cat.sh - File Transfer Client
 
-# UI Setup
 printf '\033[8;24;91t'
 echo -e "\033[0;32m"
 clear
@@ -16,7 +15,7 @@ meow() {
     else echo -e "\a"; fi
 }
 
-# --- AUTHENTICATION ---
+# --- AUTH ---
 while true; do
     clear
     echo "########################### CAT.SH LOGIN ###########################"
@@ -30,7 +29,6 @@ while true; do
     elif [ "$auth_choice" == "3" ]; then exit 0; fi
 done
 
-# --- SCANNER ---
 find_server() {
     local PORT=8000
     local SUBNET=$(ipconfig getifaddr en0 2>/dev/null | cut -d. -f1-3 || hostname -I | awk '{print $1}' | cut -d. -f1-3)
@@ -41,7 +39,6 @@ find_server() {
     cat .server_ip && rm .server_ip
 }
 
-# --- MAIN HUB ---
 while true; do
     clear
     echo "######################### CAT.SH FILE HUB #########################"
@@ -49,12 +46,11 @@ while true; do
     echo "2) Download File (View Server Files)"
     echo "3) Exit"
     read -p ">> " choice
-
     case $choice in
         1)
             IP=$(find_server)
             if [ -z "$IP" ]; then echo "No server found."; sleep 2; continue; fi
-            read -p "File path to upload: " FILE
+            read -p "File path: " FILE
             if [ -f "$FILE" ]; then
                 if curl -F "file=@$FILE" "http://$IP:8000/"; then echo "[UPLOADED]"; meow; fi
             fi
@@ -62,13 +58,10 @@ while true; do
         2)
             IP=$(find_server)
             if [ -z "$IP" ]; then echo "No server found."; sleep 2; continue; fi
-            
             echo -e "\n--- FILES ON SERVER ---"
-            # Fetches the file list from the Python server
             curl -s "http://$IP:8000/list"
             echo -e "------------------------\n"
-            
-            read -p "Enter filename to download: " DFILE
+            read -p "Filename: " DFILE
             if [ ! -z "$DFILE" ]; then
                 if curl -fO "http://$IP:8000/$DFILE"; then echo "[DOWNLOADED]"; meow; fi
             fi
