@@ -1,8 +1,7 @@
 #!/bin/bash
-# cat.sh - Client
+# cat.sh - Client (Password Protected)
 
 # --- INITIALIZATION ---
-# Create the folder on the current user's desktop
 mkdir -p /Users/$USER/Desktop/cat.folder
 DB="/Users/$USER/Desktop/cat.folder/passwords.txt"
 touch "$DB"
@@ -26,11 +25,42 @@ get_ip() {
     if [ -n "$mip" ]; then echo "$mip"; else echo "$REAL_IP"; fi
 }
 
-# --- MAIN HUB ---
+# --- AUTHENTICATION LAYER ---
+while true; do
+    clear
+    echo "########################### CAT.SH LOGIN ###########################"
+    echo "1) Sign In"
+    echo "2) Sign Up"
+    echo "3) Exit"
+    read -p ">> " auth_choice
+
+    if [ "$auth_choice" == "2" ]; then
+        read -p "New Username: " nu
+        read -s -p "New Password: " np
+        echo "$nu:$np" >> "$DB"
+        echo -e "\n[ACCOUNT CREATED]"
+        sleep 1
+    elif [ "$auth_choice" == "1" ]; then
+        read -p "Username: " u
+        read -s -p "Password: " p
+        # Checks if the username:password pair exists in the DB file
+        if grep -q "^$u:$p$" "$DB"; then
+            echo -e "\n[ACCESS GRANTED]"
+            break
+        else
+            echo -e "\n[ACCESS DENIED]"
+            sleep 1
+        fi
+    elif [ "$auth_choice" == "3" ]; then
+        exit 0
+    fi
+done
+
+# --- MAIN HUB (Only reached if break occurs above) ---
 while true; do
     clear
     echo "######################### CAT.SH FILE HUB #########################"
-    echo "Current User: $USER"
+    echo "User: $USER"
     echo "1) Upload File"
     echo "2) Download File"
     echo "3) Exit"
@@ -40,8 +70,7 @@ while true; do
         1)
             IP=$(get_ip)
             read -p "File path: " FILE
-            # Expand tilde if user types ~/Desktop...
-            FILE="${FILE/#\~/$HOME}"
+            FILE="${FILE/#\~/$HOME}" # Handle tilde
             if [ -f "$FILE" ]; then
                 if curl -F "file=@$FILE" "http://$IP:8000/"; then 
                     echo -e "\n[MEOW! UPLOADED]"; meow
@@ -54,6 +83,7 @@ while true; do
             IP=$(get_ip)
             echo -e "\n--- SERVER FILES ---"
             curl -s "http://$IP:8000/list"
+            echo -e "------------------------\n"
             read -p "Filename: " DFILE
             if [ -n "$DFILE" ]; then
                 if curl -fO "http://$IP:8000/$DFILE"; then 
