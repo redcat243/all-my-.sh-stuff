@@ -1,7 +1,5 @@
 #!/bin/bash
-# cat.sh - Client (Password Protected)
 
-# --- INITIALIZATION ---
 mkdir -p /Users/$USER/Desktop/cat.folder
 DB="/Users/$USER/Desktop/cat.folder/passwords.txt"
 touch "$DB"
@@ -25,7 +23,6 @@ get_ip() {
     if [ -n "$mip" ]; then echo "$mip"; else echo "$REAL_IP"; fi
 }
 
-# --- AUTHENTICATION LAYER ---
 while true; do
     clear
     echo "########################### CAT.SH LOGIN ###########################"
