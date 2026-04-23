@@ -1,99 +1,78 @@
 #!/bin/bash
 
-# Auto-resize to 91x24
+# 1. Resize and Stylize
 printf '\033[8;24;91t'
-echo -e "\033[0;32m" # Hacker Green
+echo -e "\033[0;32m"
+clear
 
-# Progress Bar Function
-draw_progress() {
-    local duration=$1
-    local width=40
-    for ((i=0; i<=100; i++)); do
-        let "filled = i * width / 100"
-        let "empty = width - filled"
-        printf "\r\033[KLoading System Modules: ["
-        printf "%${filled}s" | tr ' ' '#'
-        printf "%${empty}s" | tr ' ' '-'
-        printf "] %d%%" "$i"
-        sleep "$(bc -l <<< "$duration / 100")"
-    done
-    echo -e "\n"
-}
-
-# Setup Database
+# 2. Setup Filesystem
 mkdir -p ~/Desktop/cat.folder
-touch ~/Desktop/cat.folder/passwords.txt
+DB_FILE=~/Desktop/cat.folder/passwords.txt
+touch "$DB_FILE"
 
-# --- LOGIN SYSTEM ---
+# --- LOGIN LOOP ---
 while true; do
     clear
-    echo "--- CAT.SH SECURE ACCESS ---"
-    read -p "1) Sign In | 2) Sign Up: " auth
+    echo "============================= CAT.SH SECURE TERMINAL ==============================="
+    read -p "1) SIGN IN  |  2) SIGN UP  |  3) EXIT: " auth
     if [ "$auth" == "2" ]; then
-        read -p "New User: " nu; read -s -p "New Pass: " np
-        echo "$nu:$np" >> ~/Desktop/cat.folder/passwords.txt
-        echo -e "\nAccount Registered." && sleep 1
+        read -p "New User: " nu; read -s -p "New Pass: " np; echo "$nu:$np" >> "$DB_FILE"; sleep 1
     elif [ "$auth" == "1" ]; then
-        read -p "Username: " u; read -s -p "Password: " p
-        if grep -q "^$u:$p$" ~/Desktop/cat.folder/passwords.txt; then
-            echo -e "\nACCESS GRANTED."
-            # The Loading Bar (Set to 5 seconds for startup)
-            draw_progress 5
+        read -p "User: " u; read -s -p "Pass: " p
+        if grep -q "^$u:$p$" "$DB_FILE"; then
+            # Startup Loading Bar
+            for i in {1..100}; do printf "\rInitialising System... [%-20s] %d%%" $(printf "#%.0s" $(seq 1 $((i/5)))) $i; sleep 0.03; done
             break
-        else
-            echo -e "\nACCESS DENIED." && sleep 2
-        fi
-    fi
+        else echo -e "\nACCESS DENIED"; sleep 1; fi
+    elif [ "$auth" == "3" ]; then exit 0; fi
 done
 
-# --- 500 OPTIONS MENU ---
+# --- MAIN MENU ENGINE ---
 PAGE=1
 while true; do
     clear
     START=$(( (PAGE - 1) * 10 + 1 ))
     END=$(( PAGE * 10 ))
-    echo "--- CAT.SH TERMINAL (PAGE $PAGE/50) ---"
+    echo "--- CAT.SH TOOLS HUB (Page $PAGE/50) ---"
 
     for (( i=START; i<=END; i++ )); do
-        case $i in
-            1) echo "1) [SERVER] Start cat-server.sh (Uploads)";;
-            2) echo "2) [LOCAL] Download from Remote cat-server";;
-            3) echo "3) [PURGE] Delete Hack.sh (Muffin Protocol)";;
-            4) echo "4) [SENSORS] Muffin Retrieval Protocol";;
-            *) echo "$i) Hacking Module #$i";;
-        esac
+        # Mapping 500 Unique Tool Names based on Ranges
+        if [[ $i -le 50 ]]; then echo "$i) [SYSTEM] Check CPU Usage - Module $i"
+        elif [[ $i -le 100 ]]; then echo "$i) [FILE] Backup Folder - Module $i"
+        elif [[ $i -le 150 ]]; then echo "$i) [NET] Ping Local Server - Module $i"
+        elif [[ $i -le 200 ]]; then echo "$i) [MEDIA] Convert Image - Module $i"
+        elif [[ $i -le 300 ]]; then echo "$i) [WEB] Fetch Site Header - Module $i"
+        elif [[ $i -le 400 ]]; then echo "$i) [MISC] Weather Report - Module $i"
+        elif [[ $i -le 498 ]]; then echo "$i) [DEBUG] Test Terminal Sync - Module $i"
+        elif [[ $i -eq 499 ]]; then echo "499) [UPLOAD] Send file to Central Server"
+        elif [[ $i -eq 500 ]]; then echo "500) [DOWNLOAD] Pull file from Central Server"
+        fi
     done
 
     echo "-------------------------------------------------------------------------------------------"
-    echo "N) Next Page | P) Previous Page | Q) Logout"
-    read -p "Select Tool ($START-$END): " opt
+    echo "N: Next | P: Prev | Q: Logout"
+    read -p "Selection ($START-$END): " opt
 
     case $opt in
         [Nn]*) ((PAGE++)); [ $PAGE -gt 50 ] && PAGE=50 ;;
         [Pp]*) ((PAGE--)); [ $PAGE -lt 1 ] && PAGE=1 ;;
         [Qq]*) exec "$0" ;;
-        1) # START SERVER
-            echo "Starting Cat Server..."
-            draw_progress 3
-            python3 -m http.server 8000 &
-            SERVER_PID=$!
-            echo "Server Live on Port 8000. Press Enter to stop."
-            read; kill $SERVER_PID ;;
-        2) # DOWNLOAD
-            read -p "Target IP: " tip
-            read -p "Filename: " rfile
-            draw_progress 10 # Wait for "connection"
-            curl -o ~/Desktop/cat.folder/"$rfile" "http://$tip:8000/$rfile"
-            say "Hacking Complete" ;;
-        3|4|[0-9]*)
-            if [[ $opt -le 500 ]]; then
-                echo "Running Module $opt..."
-                # 30-second ping/wait as requested
-                draw_progress 30 
-                ping -c 5 google.com # Short ping just to show activity
-                say "Hacking Complete"
-                read -p "Press Enter..."
+        499) # UPLOAD LOGIC
+            read -p "Target IP: " tip; read -p "File Path: " fp
+            for i in {1..100}; do printf "\rUploading... [%-20s] %d%%" $(printf "#%.0s" $(seq 1 $((i/5)))) $i; sleep 0.3; done
+            scp "$fp" "$tip:~/Desktop/cat.folder/" && say "Upload Complete" ;;
+        500) # DOWNLOAD LOGIC
+            read -p "Server IP: " sip; read -p "File Name: " fn
+            for i in {1..100}; do printf "\rDownloading... [%-20s] %d%%" $(printf "#%.0s" $(seq 1 $((i/5)))) $i; sleep 0.3; done
+            curl -o ~/Desktop/cat.folder/"$fn" "http://$sip:8000/$fn" && say "Download Complete" ;;
+        [0-9]*)
+            if [ "$opt" -le 500 ]; then
+                # Standard 30-second delay for all options
+                for i in {1..100}; do printf "\rProcessing Tool #$opt... [%-20s] %d%%" $(printf "#%.0s" $(seq 1 $((i/5)))) $i; sleep 0.3; done
+                echo -e "\nTask #$opt executed successfully."
+                read -p "Press Enter to return..."
             fi ;;
     esac
 done
+
 
