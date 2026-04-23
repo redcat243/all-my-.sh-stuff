@@ -126,18 +126,25 @@ while true; do
             echo "[SUCCESS] Muffin acquired from the void."
             ;;
         8)
-             echo "Accessing global satellite weather feed..."
+            echo "really thats not a hacking tool but ok"
+            say "really thats not a hacking tool but ok"
+            echo "Accessing global satellite weather feed..."
+            say "Accessing global satellite weather feed..."
             # Resize to wide (125 cols, 40 rows to see the full forecast)
             printf '\033[8;40;125t'
             sleep 1 # Give the window a second to resize
             echo "checking internet connection..."
+            say "checking internet connection..."
             ping -c 10 wttr.in
             sleep 1
-             echo "Fetching weather data..."
-             sleep 1
-             echo "fetched weather data, displaying..."
+            echo "Fetching weather data..."
+            say "Fetching weather data..."
+            sleep 1
+            echo "fetched weather data, displaying..."
+            say "fetched weather data, displaying..."
             curl wttr.in
             
+            say "Feed complete. Press Enter to return to 91x24 terminal."
             read -p "Feed complete. Press Enter to return to 91x24 terminal."
             # Resize back to your standard hacker size
             printf '\033[8;24;91t'
