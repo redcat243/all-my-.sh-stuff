@@ -1,19 +1,22 @@
 #!/bin/bash
-# cat-server.sh
+# cat-server.sh - The Receiver
 
-mkdir -p ~/Desktop/cat.sh_files
-cd ~/Desktop/cat.sh_files
+# Create storage on the Desktop using $USER
+TARGET_DIR="/Users/$USER/Desktop/cat.sh_files"
+mkdir -p "$TARGET_DIR"
+cd "$TARGET_DIR"
 
-# Mac-specific IP detection
 IP_ADDR=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null)
 
 echo -e "\033[1;34m--- CAT.SH SERVER ACTIVE ---\033[0m"
+echo "Running as User: $USER"
+echo "Storage: $TARGET_DIR"
 echo "IP: $IP_ADDR | Port: 8000"
 
+# Create Python Handler (Compatible with Python 3.13/3.14)
 cat << 'EOF' > web_server.py
 import http.server
 import os
-import socket
 
 class EnhancedHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -41,17 +44,18 @@ class EnhancedHandler(http.server.SimpleHTTPRequestHandler):
                     self.send_response(200)
                     self.end_headers()
                     self.wfile.write(b"OK")
-                    print(f"Meow! Received: {filename}")
+                    print(f"Meow! Successfully received: {filename}")
                     return
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Upload error: {e}")
             self.send_response(500)
             self.end_headers()
 
 if __name__ == '__main__':
-    # Force IPv4 to prevent the '127.0.0.1' failure
+    # Listen on all interfaces
     server = http.server.HTTPServer(('0.0.0.0', 8000), EnhancedHandler)
     server.serve_forever()
 EOF
 
+# Use -u for unbuffered output (better for logs)
 python3 -u web_server.py

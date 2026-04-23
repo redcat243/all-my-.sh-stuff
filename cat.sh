@@ -1,13 +1,16 @@
 #!/bin/bash
-# cat.sh - File Transfer Client (Manual IP + Auto-Scan)
+# cat.sh - Client
 
+# --- INITIALIZATION ---
+# Create the folder on the current user's desktop
+mkdir -p /Users/$USER/Desktop/cat.folder
+DB="/Users/$USER/Desktop/cat.folder/passwords.txt"
+touch "$DB"
+
+# UI Setup
 printf '\033[8;24;91t'
 echo -e "\033[0;32m"
 clear
-
-mkdir -p ~/Desktop/cat.folder
-DB=~/Desktop/cat.folder/passwords.txt
-touch "$DB"
 
 meow() {
     if command -v say >/dev/null; then say "meow"; 
@@ -15,68 +18,47 @@ meow() {
     else echo -e "\a"; fi
 }
 
-# --- AUTH ---
-while true; do
-    clear
-    echo "########################### CAT.SH LOGIN ###########################"
-    echo "1) Sign In  2) Sign Up  3) Exit"
-    read -p ">> " auth_choice
-    if [ "$auth_choice" == "2" ]; then
-        read -p "User: " nu; read -s -p "Pass: " np; echo "$nu:$np" >> "$DB"; echo -e "\n[DONE]"; sleep 1
-    elif [ "$auth_choice" == "1" ]; then
-        read -p "User: " u; read -s -p "Pass: " p
-        if grep -q "^$u:$p$" "$DB"; then break; else echo -e "\n[DENIED]"; sleep 1; fi
-    elif [ "$auth_choice" == "3" ]; then exit 0; fi
-done
-
-# --- SERVER CONNECTION HANDLER ---
-get_server_ip() {
-    read -p "Enter Server IP (or press ENTER to auto-scan): " manual_ip
+get_ip() {
+    local REAL_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null)
+    [ -z "$REAL_IP" ] && REAL_IP="127.0.0.1"
     
-    if [ -n "$manual_ip" ]; then
-        echo "$manual_ip"
-    else
-        echo -e "[SCANNING...]" >&2
-        local PORT=8000
-        local SUBNET=$(ipconfig getifaddr en0 2>/dev/null | cut -d. -f1-3 || hostname -I | awk '{print $1}' | cut -d. -f1-3)
-        for i in {1..254}; do
-            (timeout 0.1 bash -c "echo > /dev/tcp/$SUBNET.$i/$PORT" 2>/dev/null && echo "$SUBNET.$i") & 
-        done | head -n 1 > .server_ip
-        wait
-        local found_ip=$(cat .server_ip)
-        rm .server_ip
-        echo "$found_ip"
-    fi
+    read -p "Server IP (ENTER for $REAL_IP): " mip
+    if [ -n "$mip" ]; then echo "$mip"; else echo "$REAL_IP"; fi
 }
 
+# --- MAIN HUB ---
 while true; do
     clear
     echo "######################### CAT.SH FILE HUB #########################"
+    echo "Current User: $USER"
     echo "1) Upload File"
-    echo "2) Download File (View Server Files)"
+    echo "2) Download File"
     echo "3) Exit"
     read -p ">> " choice
     
     case $choice in
         1)
-            IP=$(get_server_ip)
-            if [ -z "$IP" ]; then echo "No server found."; sleep 2; continue; fi
-            echo "Connected to: $IP"
+            IP=$(get_ip)
             read -p "File path: " FILE
+            # Expand tilde if user types ~/Desktop...
+            FILE="${FILE/#\~/$HOME}"
             if [ -f "$FILE" ]; then
-                if curl -F "file=@$FILE" "http://$IP:8000/"; then echo "[UPLOADED]"; meow; fi
+                if curl -F "file=@$FILE" "http://$IP:8000/"; then 
+                    echo -e "\n[MEOW! UPLOADED]"; meow
+                fi
+            else
+                echo "Error: File not found."
             fi
             sleep 2 ;;
         2)
-            IP=$(get_server_ip)
-            if [ -z "$IP" ]; then echo "No server found."; sleep 2; continue; fi
-            echo "Connected to: $IP"
-            echo -e "\n--- FILES ON SERVER ---"
+            IP=$(get_ip)
+            echo -e "\n--- SERVER FILES ---"
             curl -s "http://$IP:8000/list"
-            echo -e "------------------------\n"
             read -p "Filename: " DFILE
-            if [ ! -z "$DFILE" ]; then
-                if curl -fO "http://$IP:8000/$DFILE"; then echo "[DOWNLOADED]"; meow; fi
+            if [ -n "$DFILE" ]; then
+                if curl -fO "http://$IP:8000/$DFILE"; then 
+                    echo -e "\n[MEOW! DOWNLOADED]"; meow
+                fi
             fi
             sleep 2 ;;
         3) exit 0 ;;
