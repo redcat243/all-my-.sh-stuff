@@ -1,2 +1,3 @@
 # all my .sh stuff
 # This is all my .sh stuff Hack.sh is just a pretend Hacking script with a password reset function
+# The stuff here is macos only!!!!
