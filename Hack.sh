@@ -77,7 +77,7 @@ while true; do
             if [[ "$choice" == "3" ]]; then
                 open "vnc://$target"
             elif [[ "$choice" == "4" ]]; then
-                ssh "$target" 'if ! command -v brew &>/dev/null; then NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://githubusercontent.com)"; fi; brew tap redcat243/catbrowser && brew install --cask redcat243/catbrowser/catbrowser'
+                ssh "$target" 'if ! command -v brew &>/dev/null; then NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; fi; brew tap redcat243/catbrowser && brew install --cask redcat243/catbrowser/catbrowser'
             fi
             ;;
 
