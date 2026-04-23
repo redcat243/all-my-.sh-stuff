@@ -1,5 +1,5 @@
 #!/bin/bash
-# cat.sh - File Transfer Client
+# cat.sh - File Transfer Client (Manual IP + Auto-Scan)
 
 printf '\033[8;24;91t'
 echo -e "\033[0;32m"
@@ -29,14 +29,24 @@ while true; do
     elif [ "$auth_choice" == "3" ]; then exit 0; fi
 done
 
-find_server() {
-    local PORT=8000
-    local SUBNET=$(ipconfig getifaddr en0 2>/dev/null | cut -d. -f1-3 || hostname -I | awk '{print $1}' | cut -d. -f1-3)
-    for i in {1..254}; do
-        (timeout 0.1 bash -c "echo > /dev/tcp/$SUBNET.$i/$PORT" 2>/dev/null && echo "$SUBNET.$i") & 
-    done | head -n 1 > .server_ip
-    wait
-    cat .server_ip && rm .server_ip
+# --- SERVER CONNECTION HANDLER ---
+get_server_ip() {
+    read -p "Enter Server IP (or press ENTER to auto-scan): " manual_ip
+    
+    if [ -n "$manual_ip" ]; then
+        echo "$manual_ip"
+    else
+        echo -e "[SCANNING...]" >&2
+        local PORT=8000
+        local SUBNET=$(ipconfig getifaddr en0 2>/dev/null | cut -d. -f1-3 || hostname -I | awk '{print $1}' | cut -d. -f1-3)
+        for i in {1..254}; do
+            (timeout 0.1 bash -c "echo > /dev/tcp/$SUBNET.$i/$PORT" 2>/dev/null && echo "$SUBNET.$i") & 
+        done | head -n 1 > .server_ip
+        wait
+        local found_ip=$(cat .server_ip)
+        rm .server_ip
+        echo "$found_ip"
+    fi
 }
 
 while true; do
@@ -46,18 +56,21 @@ while true; do
     echo "2) Download File (View Server Files)"
     echo "3) Exit"
     read -p ">> " choice
+    
     case $choice in
         1)
-            IP=$(find_server)
+            IP=$(get_server_ip)
             if [ -z "$IP" ]; then echo "No server found."; sleep 2; continue; fi
+            echo "Connected to: $IP"
             read -p "File path: " FILE
             if [ -f "$FILE" ]; then
                 if curl -F "file=@$FILE" "http://$IP:8000/"; then echo "[UPLOADED]"; meow; fi
             fi
             sleep 2 ;;
         2)
-            IP=$(find_server)
+            IP=$(get_server_ip)
             if [ -z "$IP" ]; then echo "No server found."; sleep 2; continue; fi
+            echo "Connected to: $IP"
             echo -e "\n--- FILES ON SERVER ---"
             curl -s "http://$IP:8000/list"
             echo -e "------------------------\n"
